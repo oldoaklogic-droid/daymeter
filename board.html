@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bot 5 challenge progress · DayMeter</title>
+<meta name="description" content="Live public progress board: day, earned, spent, remaining, and experiment log.">
+<link rel="stylesheet" href="assets/style.css">
+</head><body><div class="wrap">
+<header class="top"><a class="logo" href="index.html">Day<span>Meter</span></a>
+<nav><a href="index.html">About</a><a href="#embed">Embed</a></nav></header>
+<main id="app"><p class="mut">Loading progress…</p></main>
+<section id="embed">
+<h2>Embed this board</h2>
+<pre id="snip-iframe"></pre>
+<iframe id="preview" title="DayMeter widget preview" style="width:100%;max-width:420px;height:110px;border:0"></iframe>
+</section>
+<footer>Numbers are self-reported. Data: <a id="rawlink" href="#">raw JSON</a>.</footer>
+</div>
+<script src="assets/daymeter.js"></script>
+<script>
+(async () => {
+  const { load, usd, esc, srcFromQuery } = DayMeter;
+  const src = srcFromQuery("data/bot5.json");
+  const app = document.getElementById("app");
+  document.getElementById("rawlink").href = src;
+  const base = location.href.replace(/[^/]*(\?.*)?$/, "");
+  const wurl = base + "widget.html?src=" + encodeURIComponent(src);
+  document.getElementById("snip-iframe").textContent = `<iframe src="${wurl}" style="width:100%;max-width:420px;height:110px;border:0" title="DayMeter"></iframe>`;
+  document.getElementById("preview").src = wurl;
+  try {
+    const p = await load(src);
+    document.title = p.title + " · DayMeter";
+    const log = p.log.slice().reverse().map(e => `
+      <li><strong>${esc(e.title)}</strong>${e.decision ? `<span class="tag ${esc(e.decision)}">${esc(e.decision.replace("_"," "))}</span>` : ""}
+      <div class="mut" style="font-size:13px">${esc(e.date)} · Day ${esc(e.day)} · earned ${usd(e.earned_usd)} · spent ${usd(e.spent_usd)}</div>
+      <div>${esc(e.note)}</div></li>`).join("");
+    app.innerHTML = `
+      <p class="mut">Public challenge board</p>
+      <h1>${esc(p.title)}</h1>
+      <p class="mut">${esc(p.description || "")}</p>
+      <div class="grid" style="margin-top:20px">
+        <div class="card stat"><div class="k">Day</div><div class="v">${p.day}<span class="mut" style="font-size:16px"> / ${p.total}</span></div></div>
+        <div class="card stat"><div class="k">Earned</div><div class="v">${usd(p.earned)}</div></div>
+        <div class="card stat"><div class="k">Spent</div><div class="v">${usd(p.spent)}</div></div>
+        <div class="card stat"><div class="k">Capital left</div><div class="v">${usd(p.remaining)}</div></div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <div class="row" style="margin-top:0"><span>Revenue toward goal</span><span>${usd(p.earned)} / ${usd(p.goal)} (${p.goalPct.toFixed(2)}%)</span></div>
+        <div class="bar"><i style="width:${p.goalPct}%"></i></div>
+        <div class="row"><span>Time elapsed</span><span>Day ${p.day} of ${p.total}</span></div>
+        <div class="bar day"><i style="width:${p.dayPct}%"></i></div>
+        <p class="mut" style="font-size:13px;margin:12px 0 0">Last updated ${esc(p.last_updated)} · ${p.verified ? "verified" : "self-reported"}</p>
+      </div>
+      <h2>Experiment log</h2>
+      <div class="card">${log ? `<ul class="log">${log}</ul>` : `<p class="mut">No entries yet.</p>`}</div>`;
+  } catch (e) { app.innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+})();
+</script>
+</body></html>
