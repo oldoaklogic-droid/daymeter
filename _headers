@@ -1,0 +1,5 @@
+/data/*
+  Cache-Control: no-cache
+  Access-Control-Allow-Origin: *
+/widget.html
+  Cache-Control: public, max-age=300
