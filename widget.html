@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DayMeter widget</title>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:transparent}
+.w{background:#171a21;color:#e8eaf0;border:1px solid #262b36;border-radius:12px;padding:14px 16px;max-width:420px}
+.t{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.d{font-weight:800;font-size:20px}
+.m{color:#9aa3b2;font-size:12px}.bar{height:10px;background:#0b0d11;border:1px solid #262b36;border-radius:99px;overflow:hidden;margin:8px 0 6px}
+.bar i{display:block;height:100%;min-width:2px;background:linear-gradient(90deg,#4ade80,#60a5fa)}
+a{color:#9aa3b2;text-decoration:none}a:hover{color:#e8eaf0}
+</style></head><body>
+<div class="w" id="w"><span class="m">Loading…</span></div>
+<script src="assets/daymeter.js"></script>
+<script>
+(async () => {
+  const { load, usd, esc, srcFromQuery } = DayMeter;
+  const src = srcFromQuery("data/bot5.json"), el = document.getElementById("w");
+  const board = "board.html" + (src !== "data/bot5.json" ? "?src=" + encodeURIComponent(src) : "");
+  try {
+    const p = await load(src);
+    el.innerHTML = `
+      <div class="t"><span class="d">Day ${p.day}<span class="m"> / ${p.total}</span></span>
+      <span class="m">${usd(p.earned)} of ${usd(p.goal)}</span></div>
+      <div class="bar" role="progressbar" aria-valuenow="${p.goalPct.toFixed(2)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${p.goalPct}%"></i></div>
+      <div class="t m"><span>Spent ${usd(p.spent)} · Left ${usd(p.remaining)}</span>
+      <a href="${board}" target="_blank" rel="noopener">DayMeter ↗</a></div>`;
+  } catch (e) { el.innerHTML = `<span class="m">${esc(e.message)}</span>`; }
+})();
+</script></body></html>
